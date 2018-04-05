@@ -1,9 +1,9 @@
 <?php namespace App\Http\Controllers;
 
 use App\User;
-use Tymon\JWTAuth\JWTAuth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\{JWTAuth, JWTFactory};
 
 /**
  * Class ApiAuthController
@@ -11,20 +11,6 @@ use Illuminate\Support\Facades\Validator;
  */
 class ApiAuthController extends Controller
 {
-    /**
-     * @var $JWTAuth
-     */
-    protected $JWTAuth;
-
-    /**
-     * ApiAuthController constructor.
-     * @param JWTAuth $JWTAuth
-     */
-    public function __construct(JWTAuth $JWTAuth)
-    {
-        $this->JWTAuth = $JWTAuth;
-    }
-
     /**
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -47,7 +33,7 @@ class ApiAuthController extends Controller
             'password' => bcrypt($request->get('password')),
         ]);
 
-        $token = $this->JWTAuth->fromUser($user);
+        $token = JWTAuth::fromUser($user);
 
         return response()->json(['access_token' => $token]);
     }
@@ -67,7 +53,7 @@ class ApiAuthController extends Controller
             return response()->json($validator->errors());
         }
 
-        if (! $token = $this->JWTAuth->attempt($request->only('email', 'password'))) {
+        if (! $token = JWTAuth::attempt($request->only('email', 'password'))) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -79,7 +65,7 @@ class ApiAuthController extends Controller
      */
     public function logout()
     {
-        $this->JWTAuth->invalidate();
+        JWTAuth::invalidate();
         return response([
             'status' => 'success',
             'message' => 'Logged out Successfully.'
@@ -93,7 +79,7 @@ class ApiAuthController extends Controller
      */
     public function refresh()
     {
-        return $this->respondWithToken($this->JWTAuth->refresh());
+        return $this->respondWithToken(JWTAuth::refresh());
     }
 
     /**
@@ -108,7 +94,7 @@ class ApiAuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => $this->JWTAuth->manager()->getPayloadFactory()->getTTL() * 60
+            'expires_in' => JWTFactory::getTTL() * 60
         ]);
     }
 }
