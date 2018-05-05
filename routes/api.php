@@ -15,9 +15,14 @@ use Illuminate\Http\Request;
 
 Route::post('user/register', 'ApiAuthController@register');
 Route::post('user/login', 'ApiAuthController@login');
+Route::get('user/activate', 'ApiAuthController@activate')->name('activate');
 
 Route::group(['middleware' => 'jwt.auth'], function () {
     Route::post('user/logout', 'ApiAuthController@logout');
 
+    Route::get('user/{user}', function (App\User $user) {
+        return $user->email;
+    });
 
+    Route::post('order/logout', 'ApiAuthController@logout');
 });

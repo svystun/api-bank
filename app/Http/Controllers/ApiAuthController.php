@@ -1,9 +1,11 @@
 <?php namespace App\Http\Controllers;
 
 use App\User;
+use App\Mail\VerifyMail;
+use App\Jobs\NewCustomer;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\{JWTAuth, JWTFactory};
+use Illuminate\Support\Facades\{Mail, Validator};
 
 /**
  * Class ApiAuthController
@@ -30,12 +32,15 @@ class ApiAuthController extends Controller
         $user = User::create([
             'name' => $request->get('name'),
             'email' => $request->get('email'),
+            'activation_code' => md5(microtime()),
             'password' => bcrypt($request->get('password')),
         ]);
 
-        $token = JWTAuth::fromUser($user);
+        Mail::to($user)->send(new VerifyMail($user));
 
-        return response()->json(['access_token' => $token]);
+        return response()->json([
+            'activation_url' => route('activate', ['code' => $user->activation_code])
+        ]);
     }
 
     /**
@@ -54,7 +59,9 @@ class ApiAuthController extends Controller
         }
 
         if (! $token = JWTAuth::attempt($request->only('email', 'password'))) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            return response()->json([
+                'error' => 'Unauthorized'
+            ], 401);
         }
 
         return $this->respondWithToken($token);
@@ -69,6 +76,37 @@ class ApiAuthController extends Controller
         return response([
             'status' => 'success',
             'message' => 'Logged out Successfully.'
+        ], 200);
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function activate(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'code' => 'required|alpha_num|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors());
+        }
+
+        $message = 'Sorry, your code cannot be identified.';
+        if ($user = User::where('activation_code', $request->input('code'))->first()) {
+            $message = "Your code is already verified. You can do login.";
+            if (! $user->status) {
+                $user->status = 1;
+                $user->save();
+                $message = "Your code has been verified. You can do login.";
+                dispatch(new NewCustomer($user));
+            }
+        }
+
+        return response([
+            'status' => 'success',
+            'message' => $message
         ], 200);
     }
 
