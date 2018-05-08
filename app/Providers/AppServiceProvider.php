@@ -1,9 +1,11 @@
-<?php
-
-namespace App\Providers;
+<?php namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Class AppServiceProvider
+ * @package App\Providers
+ */
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -23,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->bind('Cartalyst\Stripe\Stripe', function ($app) {
+            return new \Cartalyst\Stripe\Stripe(env('STRIPE_SECRET'));
+        });
     }
 }
