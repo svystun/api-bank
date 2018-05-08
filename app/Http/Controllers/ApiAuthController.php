@@ -6,6 +6,7 @@ use App\Jobs\NewCustomer;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\{JWTAuth, JWTFactory};
 use Illuminate\Support\Facades\{Mail, Validator};
+use App\Http\Resources\User as UserResource;
 
 /**
  * Class ApiAuthController
@@ -45,7 +46,7 @@ class ApiAuthController extends Controller
 
     /**
      * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return \App\Http\Resources\User
      */
     public function login(Request $request)
     {
@@ -64,7 +65,7 @@ class ApiAuthController extends Controller
             ], 401);
         }
 
-        return $this->respondWithToken($token);
+        return new UserResource($this->respondWithToken($token));
     }
 
     /**
@@ -113,26 +114,23 @@ class ApiAuthController extends Controller
     /**
      * Refresh a token.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return \App\Http\Resources\User
      */
     public function refresh()
     {
-        return $this->respondWithToken(JWTAuth::refresh());
+        return new UserResource($this->respondWithToken(JWTAuth::refresh()));
     }
 
     /**
      * Get the token array structure.
      *
      * @param  string $token
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * @return \stdClass
      */
     protected function respondWithToken($token = '')
     {
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => JWTFactory::getTTL() * 60
-        ]);
+        $data = new \stdClass();
+        $data->access_token = $token;
+        return $data;
     }
 }
