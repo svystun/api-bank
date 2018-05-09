@@ -24,5 +24,7 @@ Route::group(['middleware' => 'jwt.auth'], function () {
         return $user->email;
     });
 
-    Route::post('order/logout', 'ApiAuthController@logout');
+    Route::post('card/add', 'CardController@add');
+    Route::post('card/charge', 'CardController@charge');
+
 });
