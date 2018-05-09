@@ -4,7 +4,7 @@ use App\User;
 use App\Mail\VerifyMail;
 use App\Jobs\NewCustomer;
 use Illuminate\Http\Request;
-use Tymon\JWTAuth\Facades\{JWTAuth, JWTFactory};
+use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\{Mail, Validator};
 use App\Http\Resources\User as UserResource;
 
