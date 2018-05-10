@@ -41,7 +41,9 @@ class NewCustomer implements ShouldQueue
     public function handle(Stripe $stripe)
     {
         $customer = $stripe->customers()->create([
-            'email' => $this->user->email
+            'account_balance' => 100000,
+            'email' => $this->user->email,
+            'description' => 'Customer for '. $this->user->email
         ]);
 
         // Update stripe_id
